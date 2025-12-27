@@ -130,9 +130,9 @@ pub struct Step {
     pub with: HashMap<String, serde_json::Value>,
     #[serde(default, rename = "continue-on-error")]
     pub continue_on_error: bool,
-    #[serde(default, rename = "pre-assert")]
+    #[serde(default, alias = "pre-assert", rename = "assert-before")]
     pub pre_assert: Vec<String>,
-    #[serde(default, rename = "post-assert")]
+    #[serde(default, alias = "post-assert", rename = "assert-after")]
     pub post_assert: Vec<String>,
 }
 
@@ -253,7 +253,7 @@ jobs:
       - uses: order/create
         with:
           token: ${{ needs.setup.outputs.session_token }}
-        post-assert:
+        assert-after:
           - ${{ outputs.order_id != "" }}
 "#;
 

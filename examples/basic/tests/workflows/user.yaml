@@ -11,7 +11,7 @@ jobs:
         with:
           username: alice
           email: alice@example.com
-        post-assert:
+        assert-after:
           - ${{ outputs.id != "" }}
           - ${{ outputs.username == "alice" }}
           - '${{ outputs contains { "username": "alice" } }}'

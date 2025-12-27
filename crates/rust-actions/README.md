@@ -103,7 +103,7 @@ scenarios:
         with:
           username: alice
           email: alice@example.com
-        post-assert:
+        assert-after:
           - ${{ outputs.id != "" }}
           - ${{ outputs.username == "alice" }}
 ```
@@ -152,9 +152,9 @@ scenarios:
           arg1: value1
           arg2: ${{ steps.previous.outputs.field }}
         continue-on-error: true  # Optional: don't fail on error
-        pre-assert:           # Optional: assertions before step
+        assert-before:        # Optional: assertions before step
           - ${{ env.DB_URL != "" }}
-        post-assert:          # Optional: assertions after step
+        assert-after:         # Optional: assertions after step
           - ${{ outputs.id != "" }}
 ```
 
@@ -174,7 +174,7 @@ ${{ containers.postgres.url }}
 ${{ containers.postgres.host }}
 ${{ containers.postgres.port }}
 
-# Current step outputs (in post-assert only)
+# Current step outputs (in assert-after only)
 ${{ outputs.id }}
 ```
 
@@ -183,7 +183,7 @@ ${{ outputs.id }}
 Inline assertions support comparison operators and object matching:
 
 ```yaml
-post-assert:
+assert-after:
   # Scalar comparisons
   - ${{ outputs.id != "" }}
   - ${{ outputs.count > 0 }}
