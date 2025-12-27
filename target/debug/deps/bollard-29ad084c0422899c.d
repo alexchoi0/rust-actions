@@ -1,0 +1,21 @@
+/Users/alex/Desktop/git/rust-actions/target/debug/deps/bollard-29ad084c0422899c.d: /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/lib.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/auth.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/container.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/docker.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/errors.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/exec.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/image.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/network.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/read.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/secret.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/service.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/system.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/uri.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/volume.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/grpc/mod.rs
+
+/Users/alex/Desktop/git/rust-actions/target/debug/deps/libbollard-29ad084c0422899c.rlib: /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/lib.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/auth.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/container.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/docker.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/errors.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/exec.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/image.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/network.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/read.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/secret.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/service.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/system.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/uri.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/volume.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/grpc/mod.rs
+
+/Users/alex/Desktop/git/rust-actions/target/debug/deps/libbollard-29ad084c0422899c.rmeta: /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/lib.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/auth.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/container.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/docker.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/errors.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/exec.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/image.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/network.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/read.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/secret.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/service.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/system.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/uri.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/volume.rs /Users/alex/Desktop/git/rust-actions/vendor/bollard/src/grpc/mod.rs
+
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/lib.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/auth.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/container.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/docker.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/errors.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/exec.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/image.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/network.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/read.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/secret.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/service.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/system.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/uri.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/volume.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/bollard/src/grpc/mod.rs:

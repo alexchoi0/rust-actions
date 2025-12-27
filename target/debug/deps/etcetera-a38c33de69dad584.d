@@ -1,0 +1,16 @@
+/Users/alex/Desktop/git/rust-actions/target/debug/deps/etcetera-a38c33de69dad584.d: /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/lib.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/apple.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/unix.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/windows.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/xdg.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/apple.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/windows.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/xdg.rs
+
+/Users/alex/Desktop/git/rust-actions/target/debug/deps/libetcetera-a38c33de69dad584.rlib: /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/lib.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/apple.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/unix.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/windows.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/xdg.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/apple.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/windows.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/xdg.rs
+
+/Users/alex/Desktop/git/rust-actions/target/debug/deps/libetcetera-a38c33de69dad584.rmeta: /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/lib.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/apple.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/unix.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/windows.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/xdg.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/apple.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/windows.rs /Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/xdg.rs
+
+/Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/lib.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/apple.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/unix.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/windows.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/app_strategy/xdg.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/apple.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/windows.rs:
+/Users/alex/Desktop/git/rust-actions/vendor/etcetera/src/base_strategy/xdg.rs:

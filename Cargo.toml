@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/rust-actions",
+    "crates/rust-actions-macros",
+    "examples/basic",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"

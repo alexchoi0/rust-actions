@@ -1,0 +1,15 @@
+name: User Management
+
+scenarios:
+  - name: Create a new user
+    steps:
+      - name: Create user Alice
+        id: alice
+        uses: user/create
+        with:
+          username: alice
+          email: alice@example.com
+        post-assert:
+          - ${{ outputs.id != "" }}
+          - ${{ outputs.username == "alice" }}
+          - '${{ outputs contains { "username": "alice" } }}'
