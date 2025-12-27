@@ -10,6 +10,46 @@ pub struct ExprContext {
     pub background: HashMap<String, StepOutputs>,
     pub containers: HashMap<String, ContainerInfo>,
     pub outputs: Option<StepOutputs>,
+    pub needs: HashMap<String, JobOutputs>,
+    pub matrix: HashMap<String, Value>,
+    pub jobs: HashMap<String, JobOutputs>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct JobOutputs {
+    pub outputs: HashMap<String, Value>,
+}
+
+impl JobOutputs {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn get(&self, key: &str) -> Option<&Value> {
+        self.outputs.get(key)
+    }
+
+    pub fn get_string(&self, key: &str) -> Option<String> {
+        self.outputs.get(key).and_then(|v| match v {
+            Value::String(s) => Some(s.clone()),
+            Value::Number(n) => Some(n.to_string()),
+            Value::Bool(b) => Some(b.to_string()),
+            _ => Some(v.to_string()),
+        })
+    }
+
+    pub fn insert(&mut self, key: impl Into<String>, value: Value) {
+        self.outputs.insert(key.into(), value);
+    }
+
+    pub fn to_value(&self) -> Value {
+        Value::Object(
+            self.outputs
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect(),
+        )
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -27,6 +67,9 @@ impl ExprContext {
             background: HashMap::new(),
             containers: HashMap::new(),
             outputs: None,
+            needs: HashMap::new(),
+            matrix: HashMap::new(),
+            jobs: HashMap::new(),
         }
     }
 
@@ -37,6 +80,22 @@ impl ExprContext {
             background: self.background.clone(),
             containers: self.containers.clone(),
             outputs: Some(outputs),
+            needs: self.needs.clone(),
+            matrix: self.matrix.clone(),
+            jobs: self.jobs.clone(),
+        }
+    }
+
+    pub fn with_matrix(&self, matrix: HashMap<String, Value>) -> Self {
+        Self {
+            env: self.env.clone(),
+            steps: self.steps.clone(),
+            background: self.background.clone(),
+            containers: self.containers.clone(),
+            outputs: self.outputs.clone(),
+            needs: self.needs.clone(),
+            matrix,
+            jobs: self.jobs.clone(),
         }
     }
 }
@@ -244,6 +303,54 @@ fn evaluate_expr_value(expr: &str, ctx: &ExprContext) -> Result<Value> {
             }
         }
 
+        // needs.job_name.outputs.field
+        ["needs", job_name, "outputs"] => ctx
+            .needs
+            .get(*job_name)
+            .map(|o| o.to_value())
+            .ok_or_else(|| Error::Expression(format!("Job not found in needs: {}", job_name))),
+
+        ["needs", job_name, "outputs", field] => ctx
+            .needs
+            .get(*job_name)
+            .and_then(|o| o.get(field).cloned())
+            .ok_or_else(|| {
+                Error::Expression(format!("Job output not found: {}.{}", job_name, field))
+            }),
+
+        ["needs", job_name, "outputs", field, rest @ ..] => {
+            let base = ctx
+                .needs
+                .get(*job_name)
+                .and_then(|o| o.get(field).cloned())
+                .ok_or_else(|| {
+                    Error::Expression(format!("Job output not found: {}.{}", job_name, field))
+                })?;
+            navigate_value(&base, &rest.to_vec())
+        }
+
+        // matrix.key
+        ["matrix", key] => ctx
+            .matrix
+            .get(*key)
+            .cloned()
+            .ok_or_else(|| Error::Expression(format!("Matrix key not found: {}", key))),
+
+        // jobs.job_name.outputs.field (for workflow-level references)
+        ["jobs", job_name, "outputs"] => ctx
+            .jobs
+            .get(*job_name)
+            .map(|o| o.to_value())
+            .ok_or_else(|| Error::Expression(format!("Job not found: {}", job_name))),
+
+        ["jobs", job_name, "outputs", field] => ctx
+            .jobs
+            .get(*job_name)
+            .and_then(|o| o.get(field).cloned())
+            .ok_or_else(|| {
+                Error::Expression(format!("Job output not found: {}.{}", job_name, field))
+            }),
+
         _ => Err(Error::Expression(format!("Unknown expression: {}", expr))),
     }
 }
@@ -390,7 +497,42 @@ fn evaluate_expr(expr: &str, ctx: &ExprContext) -> Result<String> {
             .map(|c| c.port.to_string())
             .ok_or_else(|| Error::Expression(format!("Container not found: {}", name))),
 
+        // needs.job_name.outputs.field
+        ["needs", job_name, "outputs", field] => ctx
+            .needs
+            .get(*job_name)
+            .and_then(|outputs| outputs.get_string(field))
+            .ok_or_else(|| {
+                Error::Expression(format!("Job output not found: {}.{}", job_name, field))
+            }),
+
+        // matrix.key
+        ["matrix", key] => ctx
+            .matrix
+            .get(*key)
+            .map(|v| value_to_string(v))
+            .ok_or_else(|| Error::Expression(format!("Matrix key not found: {}", key))),
+
+        // jobs.job_name.outputs.field
+        ["jobs", job_name, "outputs", field] => ctx
+            .jobs
+            .get(*job_name)
+            .and_then(|outputs| outputs.get_string(field))
+            .ok_or_else(|| {
+                Error::Expression(format!("Job output not found: {}.{}", job_name, field))
+            }),
+
         _ => Err(Error::Expression(format!("Unknown expression: {}", expr))),
+    }
+}
+
+fn value_to_string(value: &Value) -> String {
+    match value {
+        Value::String(s) => s.clone(),
+        Value::Number(n) => n.to_string(),
+        Value::Bool(b) => b.to_string(),
+        Value::Null => "null".to_string(),
+        _ => value.to_string(),
     }
 }
 

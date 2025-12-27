@@ -2,9 +2,9 @@ use rust_actions::prelude::*;
 use rust_actions_example::TestWorld;
 
 #[tokio::test(flavor = "current_thread", start_paused = true)]
-async fn run_features() {
+async fn run_workflows() {
     RustActions::<TestWorld>::new()
-        .features("tests/features")
+        .workflows("tests/workflows")
         .run()
         .await;
 }

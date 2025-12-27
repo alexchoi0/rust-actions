@@ -1,7 +1,9 @@
 name: User Management
 
-scenarios:
-  - name: Create a new user
+jobs:
+  create-user:
+    outputs:
+      user_id: ${{ steps.alice.outputs.id }}
     steps:
       - name: Create user Alice
         id: alice

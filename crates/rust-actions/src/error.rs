@@ -32,6 +32,21 @@ pub enum Error {
     #[error("Environment variable not found: {0}")]
     EnvVar(String),
 
+    #[error("Workflow not found: {path}")]
+    WorkflowNotFound { path: String },
+
+    #[error("Job not found: {job} in workflow {workflow}")]
+    JobNotFound { workflow: String, job: String },
+
+    #[error("Invalid file reference: {uses}")]
+    InvalidFileRef { uses: String },
+
+    #[error("Circular dependency detected: {chain}")]
+    CircularDependency { chain: String },
+
+    #[error("Job dependency not found: {job} requires {dependency}")]
+    JobDependencyNotFound { job: String, dependency: String },
+
     #[error("{0}")]
     Custom(String),
 }
