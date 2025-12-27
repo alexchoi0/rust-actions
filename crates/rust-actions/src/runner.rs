@@ -88,6 +88,7 @@ pub struct RustActions<W: World + 'static> {
     single_workflow: Option<PathBuf>,
     steps: StepRegistry,
     hooks: HookRegistry<W>,
+    session_id: String,
     _phantom: PhantomData<W>,
 }
 
@@ -96,11 +97,14 @@ impl<W: World + 'static> RustActions<W> {
         let mut steps = StepRegistry::new();
         steps.collect_for::<W>();
 
+        let session_id = uuid::Uuid::new_v4().to_string().replace("-", "")[..8].to_string();
+
         Self {
             workflows_path: PathBuf::from("tests/workflows"),
             single_workflow: None,
             steps,
             hooks: HookRegistry::new(),
+            session_id,
             _phantom: PhantomData,
         }
     }
@@ -125,6 +129,8 @@ impl<W: World + 'static> RustActions<W> {
     }
 
     pub async fn run(self) {
+        std::env::set_var("RUST_ACTIONS_SESSION_ID", &self.session_id);
+
         let registry = if self.single_workflow.is_some() {
             None
         } else {

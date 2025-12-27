@@ -12,7 +12,7 @@ description = "BDD testing framework with GitHub Actions YAML syntax"
 readme = "README.md"
 
 [dependencies]
-rust-actions-macros = { version = "0.2.0", path = "../rust-actions-macros" }
+rust-actions-macros = { version = "0.2.1", path = "../rust-actions-macros" }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 serde_json = "1.0"
