@@ -109,7 +109,6 @@ impl<W: World + 'static> RustActions<W> {
     }
 
     pub async fn run(self) {
-        tokio::time::pause();
 
         let features = match parse_features(&self.features_path) {
             Ok(f) => f,

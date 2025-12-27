@@ -119,8 +119,8 @@ mod world;
 
 use world::TestWorld;
 
-#[tokio::main(flavor = "current_thread")]
-async fn main() {
+#[tokio::test(flavor = "current_thread", start_paused = true)]
+async fn run_features() {
     RustActions::<TestWorld>::new()
         .features("tests/features")
         .run()
