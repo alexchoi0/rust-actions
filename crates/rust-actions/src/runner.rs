@@ -35,22 +35,31 @@ impl StepResult {
 pub struct JobResult {
     pub name: String,
     pub matrix_suffix: String,
-    pub steps: Vec<(String, StepResult)>,
+    /// Steps: (name, result, continue_on_error)
+    pub steps: Vec<(String, StepResult, bool)>,
     pub outputs: JobOutputs,
     pub duration: Duration,
 }
 
 impl JobResult {
     pub fn passed(&self) -> bool {
-        self.steps.iter().all(|(_, r)| r.is_passed())
+        self.steps
+            .iter()
+            .all(|(_, r, continue_on_error)| r.is_passed() || *continue_on_error)
     }
 
     pub fn steps_passed(&self) -> usize {
-        self.steps.iter().filter(|(_, r)| r.is_passed()).count()
+        self.steps
+            .iter()
+            .filter(|(_, r, continue_on_error)| r.is_passed() || *continue_on_error)
+            .count()
     }
 
     pub fn steps_failed(&self) -> usize {
-        self.steps.iter().filter(|(_, r)| r.is_failed()).count()
+        self.steps
+            .iter()
+            .filter(|(_, r, continue_on_error)| r.is_failed() && !*continue_on_error)
+            .count()
     }
 }
 
@@ -356,15 +365,20 @@ impl<W: World + 'static> RustActions<W> {
                         println!("    {} {}", "✓".green(), step_name);
                     }
                     StepResult::Failed(_, msg) => {
-                        println!("    {} {}", "✗".red(), step_name);
-                        println!("      {}: {}", "Error".red(), msg);
+                        if step.continue_on_error {
+                            println!("    {} {} (expected error)", "○".yellow(), step_name);
+                            println!("      {}: {}", "Error".dimmed(), msg);
+                        } else {
+                            println!("    {} {}", "✗".red(), step_name);
+                            println!("      {}: {}", "Error".red(), msg);
+                        }
                     }
                     StepResult::Skipped => {
                         println!("    {} {} (skipped)", "○".dimmed(), step_name);
                     }
                 }
 
-                all_step_results.push((step_name, result));
+                all_step_results.push((step_name, result, step.continue_on_error));
             }
 
             let mut ref_job_output = JobOutputs::new();
@@ -452,7 +466,7 @@ impl<W: World + 'static> RustActions<W> {
             let step_name = step.name.clone().unwrap_or_else(|| step.uses.clone());
 
             if should_skip {
-                step_results.push((step_name, StepResult::Skipped));
+                step_results.push((step_name, StepResult::Skipped, false));
                 continue;
             }
 
@@ -466,13 +480,15 @@ impl<W: World + 'static> RustActions<W> {
                 should_skip = true;
             }
 
-            step_results.push((step_name, result));
+            step_results.push((step_name, result, step.continue_on_error));
         }
 
         self.hooks.run_after_scenario(&mut world).await;
 
         let duration = start.elapsed();
-        let all_passed = step_results.iter().all(|(_, r)| r.is_passed());
+        let all_passed = step_results
+            .iter()
+            .all(|(_, r, continue_on_error)| r.is_passed() || *continue_on_error);
 
         if all_passed {
             println!(
@@ -492,14 +508,19 @@ impl<W: World + 'static> RustActions<W> {
             );
         }
 
-        for (name, result) in &step_results {
+        for (name, result, continue_on_error) in &step_results {
             match result {
                 StepResult::Passed(_) => {
                     println!("    {} {}", "✓".green(), name);
                 }
                 StepResult::Failed(_, msg) => {
-                    println!("    {} {}", "✗".red(), name);
-                    println!("      {}: {}", "Error".red(), msg);
+                    if *continue_on_error {
+                        println!("    {} {} (expected error)", "○".yellow(), name);
+                        println!("      {}: {}", "Error".dimmed(), msg);
+                    } else {
+                        println!("    {} {}", "✗".red(), name);
+                        println!("      {}: {}", "Error".red(), msg);
+                    }
                 }
                 StepResult::Skipped => {
                     println!("    {} {} (skipped)", "○".dimmed(), name);
