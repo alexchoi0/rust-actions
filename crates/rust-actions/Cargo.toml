@@ -9,7 +9,7 @@ documentation.workspace = true
 keywords.workspace = true
 categories.workspace = true
 description = "BDD testing framework with GitHub Actions YAML syntax"
-readme = "../../README.md"
+readme = "README.md"
 
 [dependencies]
 rust-actions-macros = { version = "0.1.0", path = "../rust-actions-macros" }
