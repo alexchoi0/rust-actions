@@ -13,6 +13,7 @@ pub struct ExprContext {
     pub needs: HashMap<String, JobOutputs>,
     pub matrix: HashMap<String, Value>,
     pub jobs: HashMap<String, JobOutputs>,
+    pub inputs: HashMap<String, Value>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -70,6 +71,7 @@ impl ExprContext {
             needs: HashMap::new(),
             matrix: HashMap::new(),
             jobs: HashMap::new(),
+            inputs: HashMap::new(),
         }
     }
 
@@ -83,6 +85,7 @@ impl ExprContext {
             needs: self.needs.clone(),
             matrix: self.matrix.clone(),
             jobs: self.jobs.clone(),
+            inputs: self.inputs.clone(),
         }
     }
 
@@ -96,6 +99,21 @@ impl ExprContext {
             needs: self.needs.clone(),
             matrix,
             jobs: self.jobs.clone(),
+            inputs: self.inputs.clone(),
+        }
+    }
+
+    pub fn with_inputs(&self, inputs: HashMap<String, Value>) -> Self {
+        Self {
+            env: self.env.clone(),
+            steps: self.steps.clone(),
+            background: self.background.clone(),
+            containers: self.containers.clone(),
+            outputs: self.outputs.clone(),
+            needs: self.needs.clone(),
+            matrix: self.matrix.clone(),
+            jobs: self.jobs.clone(),
+            inputs,
         }
     }
 }
@@ -336,6 +354,13 @@ fn evaluate_expr_value(expr: &str, ctx: &ExprContext) -> Result<Value> {
             .cloned()
             .ok_or_else(|| Error::Expression(format!("Matrix key not found: {}", key))),
 
+        // inputs.field (for reusable workflow inputs)
+        ["inputs", field] => ctx
+            .inputs
+            .get(*field)
+            .cloned()
+            .ok_or_else(|| Error::Expression(format!("Input not found: {}", field))),
+
         // jobs.job_name.outputs.field (for workflow-level references)
         ["jobs", job_name, "outputs"] => ctx
             .jobs
@@ -512,6 +537,13 @@ fn evaluate_expr(expr: &str, ctx: &ExprContext) -> Result<String> {
             .get(*key)
             .map(|v| value_to_string(v))
             .ok_or_else(|| Error::Expression(format!("Matrix key not found: {}", key))),
+
+        // inputs.field (for reusable workflow inputs)
+        ["inputs", field] => ctx
+            .inputs
+            .get(*field)
+            .map(|v| value_to_string(v))
+            .ok_or_else(|| Error::Expression(format!("Input not found: {}", field))),
 
         // jobs.job_name.outputs.field
         ["jobs", job_name, "outputs", field] => ctx

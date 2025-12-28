@@ -140,19 +140,16 @@ impl<W: World + 'static> RustActions<W> {
     pub async fn run(self) {
         std::env::set_var("RUST_ACTIONS_SESSION_ID", &self.session_id);
 
-        let registry = if self.single_workflow.is_some() {
-            None
-        } else {
-            match WorkflowRegistry::build(&self.workflows_path) {
-                Ok(r) => Some(r),
-                Err(e) => {
-                    eprintln!(
-                        "{} Failed to build workflow registry: {}",
-                        "Error:".red().bold(),
-                        e
-                    );
-                    std::process::exit(1);
-                }
+        // Always build registry to support @file: references in all workflows
+        let registry = match WorkflowRegistry::build(&self.workflows_path) {
+            Ok(r) => Some(r),
+            Err(e) => {
+                eprintln!(
+                    "{} Failed to build workflow registry: {}",
+                    "Error:".red().bold(),
+                    e
+                );
+                std::process::exit(1);
             }
         };
 
@@ -305,7 +302,7 @@ impl<W: World + 'static> RustActions<W> {
         &self,
         job_name: &str,
         uses: &str,
-        _job: &Job,
+        job: &Job,
         registry: &WorkflowRegistry,
         parent_outputs: &HashMap<String, JobOutputs>,
     ) -> Result<JobResult> {
@@ -319,6 +316,32 @@ impl<W: World + 'static> RustActions<W> {
             job_name,
             file_path
         );
+
+        // Build inputs from workflow defaults + caller's with values
+        let mut inputs: HashMap<String, Value> = HashMap::new();
+
+        // First, populate with defaults from the workflow's input definitions
+        if let Some(trigger) = &ref_workflow.on {
+            if let Some(call_config) = &trigger.workflow_call {
+                for (input_name, input_def) in &call_config.inputs {
+                    if let Some(default) = &input_def.default {
+                        inputs.insert(input_name.clone(), default.clone());
+                    }
+                }
+            }
+        }
+
+        // Build context for evaluating 'with' expressions (may reference parent outputs)
+        let mut parent_ctx = ExprContext::new();
+        for (dep_name, dep_outputs) in parent_outputs {
+            parent_ctx.needs.insert(dep_name.clone(), dep_outputs.clone());
+        }
+
+        // Then, override with values from the caller's 'with' block (evaluate expressions)
+        for (key, value) in &job.with {
+            let evaluated = evaluate_value(value, &parent_ctx).unwrap_or_else(|_| value.clone());
+            inputs.insert(key.clone(), evaluated);
+        }
 
         let mut combined_outputs = JobOutputs::new();
 
@@ -345,6 +368,7 @@ impl<W: World + 'static> RustActions<W> {
 
             let mut ctx = ExprContext::new();
             ctx.env = ref_workflow.env.clone();
+            ctx.inputs = inputs.clone();
 
             for (dep_name, dep_outputs) in &ref_job_outputs {
                 ctx.needs.insert(dep_name.clone(), dep_outputs.clone());
@@ -394,8 +418,8 @@ impl<W: World + 'static> RustActions<W> {
             if let Some(call_config) = &trigger.workflow_call {
                 for (key, output_def) in &call_config.outputs {
                     let mut eval_ctx = ExprContext::new();
-                    for (job_name, outputs) in &ref_job_outputs {
-                        eval_ctx.jobs.insert(job_name.clone(), outputs.clone());
+                    for (jn, outputs) in &ref_job_outputs {
+                        eval_ctx.jobs.insert(jn.clone(), outputs.clone());
                     }
                     if let Ok(value) =
                         evaluate_value(&Value::String(output_def.value.clone()), &eval_ctx)
