@@ -69,11 +69,16 @@ pub struct WorkflowResult {
     pub name: String,
     pub jobs: Vec<JobResult>,
     pub duration: Duration,
+    pub ignored: Option<String>,
 }
 
 impl WorkflowResult {
     pub fn passed(&self) -> bool {
-        self.jobs.iter().all(|j| j.passed())
+        self.ignored.is_some() || self.jobs.iter().all(|j| j.passed())
+    }
+
+    pub fn is_ignored(&self) -> bool {
+        self.ignored.is_some()
     }
 
     pub fn jobs_passed(&self) -> usize {
@@ -187,8 +192,32 @@ impl<W: World + 'static> RustActions<W> {
         let mut all_results = Vec::new();
         let mut total_passed = 0;
         let mut total_failed = 0;
+        let mut total_ignored = 0;
 
         for (path, workflow) in workflows {
+            if workflow.ignore.is_ignored() {
+                let msg = workflow.ignore.message().unwrap_or("").to_string();
+                let display_msg = if msg.is_empty() {
+                    String::new()
+                } else {
+                    format!(": {}", msg)
+                };
+                println!(
+                    "\n{} {} {}",
+                    "○".yellow(),
+                    workflow.name,
+                    format!("(ignored{})", display_msg).dimmed()
+                );
+                all_results.push(WorkflowResult {
+                    name: workflow.name,
+                    jobs: vec![],
+                    duration: Duration::ZERO,
+                    ignored: Some(msg),
+                });
+                total_ignored += 1;
+                continue;
+            }
+
             let result = self.run_workflow(&path, workflow, registry.as_ref()).await;
             total_passed += result.jobs_passed();
             total_failed += result.jobs_failed();
@@ -202,6 +231,7 @@ impl<W: World + 'static> RustActions<W> {
         let total_steps_passed: usize = all_results.iter().map(|r| r.total_steps_passed()).sum();
         let total_steps_failed: usize = all_results.iter().map(|r| r.total_steps_failed()).sum();
         let total_steps = total_steps_passed + total_steps_failed;
+        let _ = total_ignored;
 
         if total_failed == 0 {
             println!(
@@ -248,6 +278,7 @@ impl<W: World + 'static> RustActions<W> {
                     name: workflow.name,
                     jobs: vec![],
                     duration: self.clock.elapsed_since(start),
+                    ignored: None,
                 };
             }
         };
@@ -302,6 +333,7 @@ impl<W: World + 'static> RustActions<W> {
             name: workflow.name,
             jobs: job_results,
             duration: self.clock.elapsed_since(start),
+            ignored: None,
         }
     }
 

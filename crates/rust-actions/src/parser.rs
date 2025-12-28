@@ -10,9 +10,37 @@ pub struct Workflow {
     #[serde(default)]
     pub on: Option<WorkflowTrigger>,
     #[serde(default)]
+    pub ignore: Ignore,
+    #[serde(default)]
     pub env: HashMap<String, String>,
     #[serde(default)]
     pub jobs: HashMap<String, Job>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum Ignore {
+    #[default]
+    No,
+    Yes(bool),
+    Message(String),
+}
+
+impl Ignore {
+    pub fn is_ignored(&self) -> bool {
+        match self {
+            Ignore::No => false,
+            Ignore::Yes(b) => *b,
+            Ignore::Message(_) => true,
+        }
+    }
+
+    pub fn message(&self) -> Option<&str> {
+        match self {
+            Ignore::Message(s) => Some(s),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
