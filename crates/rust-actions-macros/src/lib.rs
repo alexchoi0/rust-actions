@@ -223,6 +223,35 @@ struct WorkflowHeader {
     name: Option<String>,
     #[serde(default)]
     on: Option<WorkflowTrigger>,
+    #[serde(default)]
+    ignore: Ignore,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(untagged)]
+enum Ignore {
+    #[default]
+    No,
+    Yes(bool),
+    Message(String),
+}
+
+impl Ignore {
+    fn is_ignored(&self) -> bool {
+        match self {
+            Ignore::No => false,
+            Ignore::Yes(b) => *b,
+            Ignore::Message(_) => true,
+        }
+    }
+
+    fn message(&self) -> Option<&str> {
+        match self {
+            Ignore::Message(s) => Some(s),
+            Ignore::Yes(true) => Some("ignored"),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -231,22 +260,22 @@ struct WorkflowTrigger {
     workflow_call: Option<HashMap<String, serde_yaml::Value>>,
 }
 
+fn parse_workflow_header(path: &Path) -> Option<WorkflowHeader> {
+    let content = std::fs::read_to_string(path).ok()?;
+    serde_yaml::from_str(&content).ok()
+}
+
 fn is_reusable_workflow(path: &Path) -> bool {
-    let content = match std::fs::read_to_string(path) {
-        Ok(c) => c,
-        Err(_) => return false,
-    };
-
-    let header: WorkflowHeader = match serde_yaml::from_str(&content) {
-        Ok(h) => h,
-        Err(_) => return false,
-    };
-
-    header
-        .on
-        .as_ref()
+    parse_workflow_header(path)
+        .and_then(|h| h.on)
         .map(|t| t.workflow_call.is_some())
         .unwrap_or(false)
+}
+
+fn get_ignore_message(path: &Path) -> Option<String> {
+    parse_workflow_header(path)
+        .filter(|h| h.ignore.is_ignored())
+        .and_then(|h| h.ignore.message().map(String::from))
 }
 
 fn discover_yaml_files(dir: &Path) -> Vec<PathBuf> {
@@ -306,8 +335,13 @@ pub fn generate_tests(input: TokenStream) -> TokenStream {
             let test_name = path_to_test_name(file, &full_path);
             let path_str = rel_path.to_string_lossy();
 
+            let ignore_attr = get_ignore_message(file)
+                .map(|msg| quote! { #[ignore = #msg] })
+                .unwrap_or_default();
+
             quote! {
-                #[::tokio::test(flavor = "current_thread", start_paused = true)]
+                #ignore_attr
+                #[::tokio::test]
                 async fn #test_name() {
                     ::rust_actions::prelude::RustActions::<#world_type>::new()
                         .workflow(#path_str)
@@ -319,6 +353,61 @@ pub fn generate_tests(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #(#tests)*
+    };
+
+    TokenStream::from(expanded)
+}
+
+struct WorkflowTestArgs {
+    path: LitStr,
+    world_type: syn::Path,
+}
+
+impl Parse for WorkflowTestArgs {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let path: LitStr = input.parse()?;
+        input.parse::<Token![,]>()?;
+        let world_type: syn::Path = input.parse()?;
+        Ok(WorkflowTestArgs { path, world_type })
+    }
+}
+
+fn filename_to_test_name(path: &Path) -> proc_macro2::Ident {
+    let stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("test");
+
+    let name = stem.replace('-', "_").replace('.', "_");
+    let name = format!("test_{}", name);
+    proc_macro2::Ident::new(&name, proc_macro2::Span::call_site())
+}
+
+#[proc_macro]
+pub fn workflow_test(input: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(input as WorkflowTestArgs);
+    let workflow_path = args.path.value();
+    let world_type = &args.world_type;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .expect("CARGO_MANIFEST_DIR not set");
+    let full_path = Path::new(&manifest_dir).join(&workflow_path);
+
+    let test_name = filename_to_test_name(&full_path);
+
+    let ignore_attr = get_ignore_message(&full_path)
+        .map(|msg| quote! { #[ignore = #msg] })
+        .unwrap_or_default();
+
+    let expanded = quote! {
+        #ignore_attr
+        #[::tokio::test]
+        async fn #test_name() {
+            ::rust_actions::prelude::RustActions::<#world_type>::new()
+                .workflow(#workflow_path)
+                .run()
+                .await;
+        }
     };
 
     TokenStream::from(expanded)

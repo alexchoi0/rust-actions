@@ -34,8 +34,8 @@ pub mod prelude {
     pub use crate::workflow_registry::WorkflowRegistry;
     pub use crate::world::World;
     pub use rust_actions_macros::{
-        after_all, after_scenario, after_step, before_all, before_scenario, before_step, step,
-        Args, Outputs, World,
+        after_all, after_scenario, after_step, before_all, before_scenario, before_step,
+        generate_tests, step, workflow_test, Args, Outputs, World,
     };
     pub use serde::{Deserialize, Serialize};
     pub use uuid::Uuid;
