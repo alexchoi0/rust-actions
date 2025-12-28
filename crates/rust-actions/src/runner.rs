@@ -1,3 +1,4 @@
+use crate::clock::VirtualClock;
 use crate::expr::{evaluate_assertion, evaluate_value, ExprContext, JobOutputs};
 use crate::hooks::HookRegistry;
 use crate::matrix::{expand_matrix, format_matrix_suffix, MatrixCombination};
@@ -12,7 +13,7 @@ use std::any::Any;
 use std::collections::{HashMap, HashSet};
 use std::marker::PhantomData;
 use std::path::PathBuf;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 #[derive(Debug, Clone)]
 pub enum StepResult {
@@ -98,6 +99,7 @@ pub struct RustActions<W: World + 'static> {
     steps: StepRegistry,
     hooks: HookRegistry<W>,
     session_id: String,
+    clock: VirtualClock,
     _phantom: PhantomData<W>,
 }
 
@@ -114,8 +116,13 @@ impl<W: World + 'static> RustActions<W> {
             steps,
             hooks: HookRegistry::new(),
             session_id,
+            clock: VirtualClock::new(),
             _phantom: PhantomData,
         }
+    }
+
+    pub fn clock(&self) -> &VirtualClock {
+        &self.clock
     }
 
     pub fn workflows(mut self, path: impl Into<PathBuf>) -> Self {
@@ -230,7 +237,7 @@ impl<W: World + 'static> RustActions<W> {
         workflow: Workflow,
         registry: Option<&WorkflowRegistry>,
     ) -> WorkflowResult {
-        let start = Instant::now();
+        let start = self.clock.now();
         println!("\n{} {}", "Workflow:".bold(), workflow.name);
 
         let job_order = match toposort_jobs(&workflow.jobs) {
@@ -240,7 +247,7 @@ impl<W: World + 'static> RustActions<W> {
                 return WorkflowResult {
                     name: workflow.name,
                     jobs: vec![],
-                    duration: start.elapsed(),
+                    duration: self.clock.elapsed_since(start),
                 };
             }
         };
@@ -294,7 +301,7 @@ impl<W: World + 'static> RustActions<W> {
         WorkflowResult {
             name: workflow.name,
             jobs: job_results,
-            duration: start.elapsed(),
+            duration: self.clock.elapsed_since(start),
         }
     }
 
@@ -306,7 +313,7 @@ impl<W: World + 'static> RustActions<W> {
         registry: &WorkflowRegistry,
         parent_outputs: &HashMap<String, JobOutputs>,
     ) -> Result<JobResult> {
-        let start = Instant::now();
+        let start = self.clock.now();
         let file_path = parse_file_ref(uses)?;
         let ref_workflow = registry.resolve_file_ref(uses)?;
 
@@ -361,7 +368,7 @@ impl<W: World + 'static> RustActions<W> {
                         matrix_suffix: String::new(),
                         steps: vec![],
                         outputs: JobOutputs::new(),
-                        duration: start.elapsed(),
+                        duration: self.clock.elapsed_since(start),
                     });
                 }
             };
@@ -435,7 +442,7 @@ impl<W: World + 'static> RustActions<W> {
             matrix_suffix: String::new(),
             steps: all_step_results,
             outputs: combined_outputs,
-            duration: start.elapsed(),
+            duration: self.clock.elapsed_since(start),
         })
     }
 
@@ -447,7 +454,7 @@ impl<W: World + 'static> RustActions<W> {
         parent_outputs: &HashMap<String, JobOutputs>,
         matrix_values: &MatrixCombination,
     ) -> JobResult {
-        let start = Instant::now();
+        let start = self.clock.now();
         let matrix_suffix = format_matrix_suffix(matrix_values);
 
         let mut world = match W::new().await {
@@ -465,7 +472,7 @@ impl<W: World + 'static> RustActions<W> {
                     matrix_suffix,
                     steps: vec![],
                     outputs: JobOutputs::new(),
-                    duration: start.elapsed(),
+                    duration: self.clock.elapsed_since(start),
                 };
             }
         };
@@ -509,7 +516,7 @@ impl<W: World + 'static> RustActions<W> {
 
         self.hooks.run_after_scenario(&mut world).await;
 
-        let duration = start.elapsed();
+        let duration = self.clock.elapsed_since(start);
         let all_passed = step_results
             .iter()
             .all(|(_, r, continue_on_error)| r.is_passed() || *continue_on_error);
@@ -569,20 +576,20 @@ impl<W: World + 'static> RustActions<W> {
     }
 
     async fn run_step(&self, world: &mut W, step: &Step, ctx: &mut ExprContext) -> StepResult {
-        let start = Instant::now();
+        let start = self.clock.now();
 
         for assertion in &step.pre_assert {
             match evaluate_assertion(assertion, ctx) {
                 Ok(true) => {}
                 Ok(false) => {
                     return StepResult::Failed(
-                        start.elapsed(),
+                        self.clock.elapsed_since(start),
                         format!("Pre-assertion failed: {}", assertion),
                     );
                 }
                 Err(e) => {
                     return StepResult::Failed(
-                        start.elapsed(),
+                        self.clock.elapsed_since(start),
                         format!("Pre-assertion error: {}", e),
                     );
                 }
@@ -593,7 +600,7 @@ impl<W: World + 'static> RustActions<W> {
             Some(f) => f,
             None => {
                 return StepResult::Failed(
-                    start.elapsed(),
+                    self.clock.elapsed_since(start),
                     format!("Step not found: {}", step.uses),
                 );
             }
@@ -608,7 +615,7 @@ impl<W: World + 'static> RustActions<W> {
             Ok(args) => args,
             Err(e) => {
                 return StepResult::Failed(
-                    start.elapsed(),
+                    self.clock.elapsed_since(start),
                     format!("Args evaluation failed: {}", e),
                 );
             }
@@ -617,7 +624,7 @@ impl<W: World + 'static> RustActions<W> {
         let world_any: &mut dyn Any = world;
         let outputs = match step_fn(world_any, evaluated_args).await {
             Ok(outputs) => outputs,
-            Err(e) => return StepResult::Failed(start.elapsed(), e.to_string()),
+            Err(e) => return StepResult::Failed(self.clock.elapsed_since(start), e.to_string()),
         };
 
         if let Some(id) = &step.id {
@@ -632,13 +639,13 @@ impl<W: World + 'static> RustActions<W> {
                     Ok(true) => {}
                     Ok(false) => {
                         return StepResult::Failed(
-                            start.elapsed(),
+                            self.clock.elapsed_since(start),
                             format!("Post-assertion failed: {}", assertion),
                         );
                     }
                     Err(e) => {
                         return StepResult::Failed(
-                            start.elapsed(),
+                            self.clock.elapsed_since(start),
                             format!("Post-assertion error: {}", e),
                         );
                     }
@@ -646,7 +653,7 @@ impl<W: World + 'static> RustActions<W> {
             }
         }
 
-        StepResult::Passed(start.elapsed())
+        StepResult::Passed(self.clock.elapsed_since(start))
     }
 }
 

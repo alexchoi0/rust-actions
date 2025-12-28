@@ -1,4 +1,5 @@
 pub mod args;
+pub mod clock;
 pub mod determinism;
 pub mod error;
 pub mod expr;
@@ -20,6 +21,7 @@ pub use serde_json;
 
 pub mod prelude {
     pub use crate::args::{FromArgs, RawArgs};
+    pub use crate::clock::{Instant, VirtualClock};
     pub use crate::determinism::SeededRng;
     pub use crate::error::{Error, Result, StepError};
     pub use crate::expr::JobOutputs;
