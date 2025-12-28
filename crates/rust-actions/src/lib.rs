@@ -8,6 +8,7 @@ pub mod outputs;
 pub mod parser;
 pub mod registry;
 pub mod runner;
+pub mod validate;
 pub mod workflow_registry;
 pub mod world;
 
